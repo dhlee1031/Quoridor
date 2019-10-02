@@ -2,7 +2,7 @@
 #include <unordered_map>
 #include <queue>
 #define N 3
-#define B 0
+#define B 1
 
 using namespace std;
 typedef long long ll;
@@ -40,10 +40,10 @@ void get_coorblk(void)
 	int m = (N - 1)*(N - 1);
 	for (int i = 0; i < m; i++)
 		if (((ll)1 << i) & coorblk)
-			pbk[i % (N - 1) + 1][i / (N - 1)] = 1;	//¼¼·Î
+			pbk[i % (N - 1) + 1][i / (N - 1)] = 1;	//ì„¸ë¡œ
 	for (int i = m; i < m * 2; i++)
 		if (((ll)1 << i) & coorblk)
-			pbk[i % (N - 1) + 1][i / (N - 1)] = 2;	//°¡·Î
+			pbk[i % (N - 1) + 1][i / (N - 1)] = 2;	//ê°€ë¡œ
 
 	coorblk >>= 32;
 	py2 = coorblk & 7;	coorblk >>= 3;
@@ -219,15 +219,18 @@ void f(int k)
 					if (blk_ok(k, i, j, l))
 					{
 						
-						tbk[i][j] = l;
+						pbk[i][j] = l;
 						if (k == 1) t1bn--;
 						else t2bn--;
+						p1bn = t1bn; p2bn = t2bn;
 						make_coorblk(tx1, ty1, tx2, ty2);
+
 						t = insert(0, 0, 1, k);
 
-						tbk[i][j] = 0;
+						pbk[i][j] = 0;
 						if (k == 1) t1bn++;
 						else t2bn++;
+						p1bn = t1bn; p2bn = t2bn;
 						make_coorblk(tx1, ty1, tx2, ty2);
 					}
 	}
