@@ -1,16 +1,15 @@
-#include <stdio.h>
+#include <bits/stdc++.h>
 #include <unordered_map>
-#include <queue>
-#include <vector>
+#pragma gcc optimize("O3")
 
 using namespace std;
 typedef long long ll;
+
 unordered_map<ll, int> M, P;
 unordered_map<int, ll> K;
-queue<int> Q;
 vector<vector<int> > V;
 
-ll coorblk, cnt, prev;
+ll bitmask, cnt, prev;
 int N, B;
 int p1bn, p2bn, ccnt;
 int px1, py1, px2, py2;
@@ -19,55 +18,55 @@ int dx[4] = { -1,0,1,0 }, dy[4] = { 0,1,0,-1 };
 int px[4][2] = { {-1,-1}, {-1,0}, {0,0}, {0,-1} }, py[4][2] = { {-1,0}, {0,0}, {0,-1}, {-1,-1} };
 int turn, vst[10000000];
 char filename[128];
-FILE *in, *out;
+FILE* in, * out;
 
-void make_coorblk(int k, int x1, int y1, int x2, int y2)
+void encode_bitmask(int k, int x1, int y1, int x2, int y2)
 {
-	coorblk = k - 1;
-	coorblk <<= 3;	coorblk |= p1bn;
-	coorblk <<= 3;	coorblk |= p2bn;
-	coorblk <<= 3;	coorblk |= x1;
-	coorblk <<= 3;	coorblk |= y1;
-	coorblk <<= 3;	coorblk |= x2;
-	coorblk <<= 3;	coorblk |= y2;
-	coorblk <<= 32;
+	bitmask = k - 1;
+	bitmask <<= 3;	bitmask |= p1bn;
+	bitmask <<= 3;	bitmask |= p2bn;
+	bitmask <<= 3;	bitmask |= x1;
+	bitmask <<= 3;	bitmask |= y1;
+	bitmask <<= 3;	bitmask |= x2;
+	bitmask <<= 3;	bitmask |= y2;
+	bitmask <<= 32;
 
 	for (int i = 1; i < N; i++)
 		for (int j = 1; j < N; j++)
 			if (pbk[i][j] == 1)
-				coorblk |= ((ll)1 << ((i - 1)*(N - 1) + j - 1));
+				bitmask |= ((ll)1 << ((i - 1) * (N - 1) + j - 1));
 			else if (pbk[i][j] == 2)
-				coorblk |= ((ll)1 << ((i - 1)*(N - 1) + j - 1 + (N - 1)*(N - 1)));
+				bitmask |= ((ll)1 << ((i - 1) * (N - 1) + j - 1 + (N - 1) * (N - 1)));
 }
-void get_coorblk(void)
+void decode_bitmask(void)
 {
-	ll temp = coorblk;
+	ll temp = bitmask;
 
 	for (int i = 1; i < N; i++)
 		for (int j = 1; j < N; j++)
 			pbk[i][j] = 0;
-	int m = (N - 1)*(N - 1);
+	int m = (N - 1) * (N - 1);
 	for (int i = 0; i < m; i++)
-		if (((ll)1 << i) & coorblk)
+		if (((ll)1 << i) & bitmask)
 			pbk[i / (N - 1) + 1][i % (N - 1) + 1] = 1;	//세로
 	for (int i = m; i < m * 2; i++)
-		if (((ll)1 << i) & coorblk)
+		if (((ll)1 << i) & bitmask)
 			pbk[(i - m) / (N - 1) + 1][(i - m) % (N - 1) + 1] = 2;	//가로
 
-	coorblk >>= 32;
-	py2 = coorblk & 7;	coorblk >>= 3;
-	px2 = coorblk & 7;	coorblk >>= 3;
-	py1 = coorblk & 7;	coorblk >>= 3;
-	px1 = coorblk & 7;	coorblk >>= 3;
-	p2bn = coorblk & 7;	coorblk >>= 3;
-	p1bn = coorblk & 7; coorblk >>= 3;
-	turn = (coorblk & 1) + 1;
+	bitmask >>= 32;
+	py2 = bitmask & 7;	bitmask >>= 3;
+	px2 = bitmask & 7;	bitmask >>= 3;
+	py1 = bitmask & 7;	bitmask >>= 3;
+	px1 = bitmask & 7;	bitmask >>= 3;
+	p2bn = bitmask & 7;	bitmask >>= 3;
+	p1bn = bitmask & 7; bitmask >>= 3;
+	turn = (bitmask & 1) + 1;
 
-	coorblk = temp;
+	bitmask = temp;
 }
-void show_coorblk(void)
+void show_bitmask(void)
 {
-	get_coorblk();
+	decode_bitmask();
 	int a[6][6] = { 0 };
 	a[N - py1 + 1][px1] = 1;
 	a[N - py2 + 1][px2] = 2;
@@ -91,119 +90,89 @@ void show_coorblk(void)
 	fprintf(out, "%d %d\n", p1bn, p2bn);
 	fprintf(out, "\n");
 }
-bool small_range(int x)
+inline bool range_s(int x)
 {
-	if (1 <= x && x < N)
-		return true;
-	return false;
+	return 1 <= x && x < N;
 }
-bool large_range(int x)
+inline bool range_l(int x)
 {
-	if (1 <= x && x <= N)
-		return true;
-	return false;
+	return 1 <= x && x <= N;
 }
 bool pbk_empty(int x, int y, int k)
 {
-	if (small_range(x) && small_range(y) && pbk[x][y] == k)
-		return false;
-	return true;
+	return !(range_s(x) && range_s(y) && pbk[x][y] == k);
 }
-bool can_go(int x, int y, int k)
+bool can_go(int x, int y, int d)
 {
-	int x1 = x + px[k][0], y1 = y + py[k][0], x2 = x + px[k][1], y2 = y + py[k][1];
-
-	if (large_range(x + dx[k]) && large_range(y + dy[k]) && pbk_empty(x1, y1, k % 2 + 1) && pbk_empty(x2, y2, k % 2 + 1))
-			return true;
-	return false;
+	int x1 = x + px[d][0], y1 = y + py[d][0], x2 = x + px[d][1], y2 = y + py[d][1];
+	return range_l(x + dx[d]) && range_l(y + dy[d]) && pbk_empty(x1, y1, d % 2 + 1) && pbk_empty(x2, y2, d % 2 + 1);
+}
+bool can_win(int x0, int y0)
+{
+	int win = 0, vst[6][6] = { 0 };
+	queue<int> Q;
+	Q.push(x0); Q.push(y0); vst[x0][y0] = 1;
+	while (!Q.empty() && !win)
+	{
+		int xx = Q.front(); Q.pop();
+		int yy = Q.front(); Q.pop();
+		if (yy == N)
+		{
+			win = 1;
+			continue;
+		}
+		for (int i = 0; i < 4; i++)
+			if (can_go(xx, yy, i) && vst[xx + dx[i]][yy + dy[i]] == 0) {
+				Q.push(xx + dx[i]); Q.push(yy + dy[i]); vst[xx + dx[i]][yy + dy[i]] = 1;
+			}
+	}
+	return win;
 }
 bool blk_ok(int z, int x, int y, int d)
 {
-	get_coorblk();
+	decode_bitmask();
 
-	if (z == 1 && p1bn == 0 || z == 2 && p2bn == 0)
+	if (z == 1 && p1bn == 0 || z == 2 && p2bn == 0 || pbk[x][y])
 		return false;
-	if (!(d == 1 && pbk[x][y] == 0 && pbk_empty(x, y - 1, 1) && pbk_empty(x, y + 1, 1)
-	   || d == 2 && pbk[x][y] == 0 && pbk_empty(x - 1, y, 2) && pbk_empty(x + 1, y, 2)))
+	if (!(d == 1 && pbk_empty(x, y - 1, 1) && pbk_empty(x, y + 1, 1)
+		|| d == 2 && pbk_empty(x - 1, y, 2) && pbk_empty(x + 1, y, 2)))
 		return false;
 
-	int i, end1 = 0, end2 = 0, xx, yy, vst[6][6] = { 0 };
 	pbk[x][y] = d;
-	while (!Q.empty())
-		Q.pop();
-	Q.push(px1); Q.push(py1);
-	vst[px1][py1] = 1;
-	while (!Q.empty() && !end1)
-	{
-		xx = Q.front(); Q.pop();
-		yy = Q.front(); Q.pop();
-		if (yy == N)
-		{
-			end1 = 1;
-			continue;
-		}
-		for (i = 0; i < 4; i++)
-			if (can_go(xx, yy, i) && vst[xx + dx[i]][yy + dy[i]] == 0) {
-				Q.push(xx + dx[i]); Q.push(yy + dy[i]); vst[xx + dx[i]][yy + dy[i]] = 1;
-			}
-	}
-
-	for (int i = 0; i < 6; i++)
-		for (int j = 0; j < 6; j++)
-			vst[i][j] = 0;
-	while (!Q.empty())
-		Q.pop();
-	Q.push(px2); Q.push(py2);
-	vst[px2][py2] = 1;
-	while (!Q.empty() && !end2)
-	{
-		xx = Q.front(); Q.pop();
-		yy = Q.front(); Q.pop();
-		if (yy == 1)
-		{
-			end2 = 1;
-			continue;
-		}
-		for (i = 0; i < 4; i++)
-			if (can_go(xx, yy, i) && vst[xx + dx[i]][yy + dy[i]] == 0) {
-				Q.push(xx + dx[i]); Q.push(yy + dy[i]); vst[xx + dx[i]][yy + dy[i]] = 1;
-			}
-	}
+	bool ret = can_win(px1, py1) && can_win(px2, py2);
 	pbk[x][y] = 0;
 
-	if (end1 && end2)
-		return true;
-	return false;
+	return ret;
 }
 void f(int);
 int insert(ll prev, int i, int y, int n, int k)
 {
-	if (M.find(coorblk) == M.end())
+	if (M.find(bitmask) == M.end())
 	{
-		P.insert(make_pair(coorblk, ++cnt));
-		K.insert(make_pair(cnt, coorblk));
+		P.insert(make_pair(bitmask, ++cnt));
+		K.insert(make_pair(cnt, bitmask));
 		V.push_back(vector<int>());
-		V[P[prev]].push_back(P[coorblk]);
+		V[P[prev]].push_back(P[bitmask]);
 		if (y == n)
 		{
-			M.insert(make_pair(coorblk, k));
+			M.insert(make_pair(bitmask, k));
 			return -10;
 		}
 		else
 		{
-			M.insert(make_pair(coorblk, 0));
+			M.insert(make_pair(bitmask, 0));
 			f(3 - k);
 		}
 	}
 	else
-		V[P[prev]].push_back(P[coorblk]);
+		V[P[prev]].push_back(P[bitmask]);
 	return i;
 }
 void f(int k)
 {
-	get_coorblk();
+	decode_bitmask();
 
-	ll prev = coorblk;
+	ll prev = bitmask;
 	int i, j, tx1 = px1, ty1 = py1, tx2 = px2, ty2 = py2, t1bn = p1bn, t2bn = p2bn, tbk[6][6];
 	for (i = 1; i < N; i++)
 		for (j = 1; j < N; j++)
@@ -218,23 +187,23 @@ void f(int k)
 				{
 					if (i > 0 && can_go(tx1 + dx[i % 4], ty1 + dy[i % 4], i % 4))
 					{
-						make_coorblk(3 - k, tx1 + 2 * dx[i % 4], ty1 + 2 * dy[i % 4], tx2, ty2);
+						encode_bitmask(3 - k, tx1 + 2 * dx[i % 4], ty1 + 2 * dy[i % 4], tx2, ty2);
 						i = insert(prev, i, ty1 + 2 * dy[i % 4], N, k);
-						make_coorblk(k, tx1, ty1, tx2, ty2);
+						encode_bitmask(k, tx1, ty1, tx2, ty2);
 					}
 					else if (i > 0)
 					{
 						if (i > 0 && can_go(tx1 + dx[i % 4], ty1 + dy[i % 4], (i + 1) % 4))
 						{
-							make_coorblk(3 - k, tx1 + dx[i % 4] + dx[(i + 1) % 4], ty1 + dy[i % 4] + dy[(i + 1) % 4], tx2, ty2);
+							encode_bitmask(3 - k, tx1 + dx[i % 4] + dx[(i + 1) % 4], ty1 + dy[i % 4] + dy[(i + 1) % 4], tx2, ty2);
 							i = insert(prev, i, ty1 + dy[i % 4] + dy[(i + 1) % 4], N, k);
-							make_coorblk(k, tx1, ty1, tx2, ty2);
+							encode_bitmask(k, tx1, ty1, tx2, ty2);
 						}
 						if (i > 0 && can_go(tx1 + dx[i % 4], ty1 + dy[i % 4], (i + 3) % 4))
 						{
-							make_coorblk(3 - k, tx1 + dx[i % 4] + dx[(i + 3) % 4], ty1 + dy[i % 4] + dy[(i + 3) % 4], tx2, ty2);
+							encode_bitmask(3 - k, tx1 + dx[i % 4] + dx[(i + 3) % 4], ty1 + dy[i % 4] + dy[(i + 3) % 4], tx2, ty2);
 							i = insert(prev, i, ty1 + dy[i % 4] + dy[(i + 3) % 4], N, k);
-							make_coorblk(k, tx1, ty1, tx2, ty2);
+							encode_bitmask(k, tx1, ty1, tx2, ty2);
 						}
 					}
 				}
@@ -242,9 +211,9 @@ void f(int k)
 				{
 					if (i > 0)
 					{
-						make_coorblk(3 - k, tx1 + dx[i % 4], ty1 + dy[i % 4], tx2, ty2);
+						encode_bitmask(3 - k, tx1 + dx[i % 4], ty1 + dy[i % 4], tx2, ty2);
 						i = insert(prev, i, ty1 + dy[i % 4], N, k);
-						make_coorblk(k, tx1, ty1, tx2, ty2);
+						encode_bitmask(k, tx1, ty1, tx2, ty2);
 					}
 				}
 			}
@@ -258,23 +227,23 @@ void f(int k)
 				{
 					if (i > 0 && can_go(tx2 + dx[i % 4], ty2 + dy[i % 4], i % 4))
 					{
-						make_coorblk(3 - k, tx1, ty1, tx2 + 2 * dx[i % 4], ty2 + 2 * dy[i % 4]);
+						encode_bitmask(3 - k, tx1, ty1, tx2 + 2 * dx[i % 4], ty2 + 2 * dy[i % 4]);
 						i = insert(prev, i, ty2 + 2 * dy[i % 4], 1, k);
-						make_coorblk(k, tx1, ty1, tx2, ty2);
+						encode_bitmask(k, tx1, ty1, tx2, ty2);
 					}
 					else if (i > 0)
 					{
 						if (i > 0 && can_go(tx2 + dx[i % 4], ty2 + dy[i % 4], (i + 1) % 4))
 						{
-							make_coorblk(3 - k, tx1, ty1, tx2 + dx[i % 4] + dx[(i + 1) % 4], ty2 + dy[i % 4] + dy[(i + 1) % 4]);
+							encode_bitmask(3 - k, tx1, ty1, tx2 + dx[i % 4] + dx[(i + 1) % 4], ty2 + dy[i % 4] + dy[(i + 1) % 4]);
 							i = insert(prev, i, ty2 + dy[i % 4] + dy[(i + 1) % 4], 1, k);
-							make_coorblk(k, tx1, ty1, tx2, ty2);
+							encode_bitmask(k, tx1, ty1, tx2, ty2);
 						}
 						if (i > 0 && can_go(tx2 + dx[i % 4], ty2 + dy[i % 4], (i + 3) % 4))
 						{
-							make_coorblk(3 - k, tx1, ty1, tx2 + dx[i % 4] + dx[(i + 3) % 4], ty2 + dy[i % 4] + dy[(i + 3) % 4]);
+							encode_bitmask(3 - k, tx1, ty1, tx2 + dx[i % 4] + dx[(i + 3) % 4], ty2 + dy[i % 4] + dy[(i + 3) % 4]);
 							i = insert(prev, i, ty2 + dy[i % 4] + dy[(i + 3) % 4], 1, k);
-							make_coorblk(k, tx1, ty1, tx2, ty2);
+							encode_bitmask(k, tx1, ty1, tx2, ty2);
 						}
 					}
 				}
@@ -282,9 +251,9 @@ void f(int k)
 				{
 					if (i > 0)
 					{
-						make_coorblk(3 - k, tx1, ty1, tx2 + dx[i % 4], ty2 + dy[i % 4]);
+						encode_bitmask(3 - k, tx1, ty1, tx2 + dx[i % 4], ty2 + dy[i % 4]);
 						i = insert(prev, i, ty2 + dy[i % 4], 1, k);
-						make_coorblk(k, tx1, ty1, tx2, ty2);
+						encode_bitmask(k, tx1, ty1, tx2, ty2);
 					}
 				}
 			}
@@ -304,7 +273,7 @@ void f(int k)
 						for (int a = 1; a < N; a++)
 							for (int b = 1; b < N; b++)
 								pbk[a][b] = tbk[a][b];
-						make_coorblk(3 - k, tx1, ty1, tx2, ty2);
+						encode_bitmask(3 - k, tx1, ty1, tx2, ty2);
 
 						t = insert(prev, 0, 0, 1, k);
 
@@ -315,16 +284,16 @@ void f(int k)
 						for (int a = 1; a < N; a++)
 							for (int b = 1; b < N; b++)
 								pbk[a][b] = tbk[a][b];
-						make_coorblk(k, tx1, ty1, tx2, ty2);
+						encode_bitmask(k, tx1, ty1, tx2, ty2);
 					}
 	}
 }
 void dfs(int idx)
 {
 	vst[idx] = 1;
-	coorblk = K[idx];
+	bitmask = K[idx];
 	fprintf(out, "%d\n", idx);
-	show_coorblk();
+	show_bitmask();
 
 	int siz = V[idx].size();
 	for (int i = 0; i < siz; i++)
@@ -337,10 +306,10 @@ int main(void)
 	fscanf(in, "%d %d", &N, &B);
 
 	p1bn = p2bn = B;
-	make_coorblk(1, N / 2 + 1, 1, N / 2 + 1, N);
-	M.insert(make_pair(coorblk, 0));
-	P.insert(make_pair(coorblk, ++cnt));
-	K.insert(make_pair(cnt, coorblk));
+	encode_bitmask(1, N / 2 + 1, 1, N / 2 + 1, N);
+	M.insert(make_pair(bitmask, 0));
+	P.insert(make_pair(bitmask, ++cnt));
+	K.insert(make_pair(cnt, bitmask));
 	V.push_back(vector<int>());
 	V.push_back(vector<int>());
 	f(1);
@@ -356,9 +325,9 @@ int main(void)
 	auto iter = M.begin();
 	for (; iter != M.end(); ++iter)
 	{
-		coorblk = iter->first;
-//		show_coorblk();
-		fprintf(out, "%d %lld\n", P[coorblk], coorblk);
+		bitmask = iter->first;
+		//		show_coorblk();
+		fprintf(out, "%d %lld\n", P[bitmask], bitmask);
 	}
 	printf("%lld\n", cnt);
 	for (int i = 1; i <= cnt; i++)
