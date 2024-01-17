@@ -66,32 +66,6 @@ void decode_bitmask(void)
 
 	bitmask = temp;
 }
-void show_bitmask(void)
-{
-	decode_bitmask();
-	int a[6][6] = { 0 };
-	a[N - py1 + 1][px1] = 1;
-	a[N - py2 + 1][px2] = 2;
-
-	fprintf(out, "whos turn? %d\n", turn);
-	fprintf(out, "player location:\n");
-	for (int i = 1; i <= N; i++)
-	{
-		for (int j = 1; j <= N; j++)
-			fprintf(out, "%d ", a[i][j]);
-		fprintf(out, "\n");
-	}
-	fprintf(out, "block location:\n");
-	for (int i = 1; i < N; i++)
-	{
-		for (int j = 1; j < N; j++)
-			fprintf(out, "%d ", pbk[j][N - i]);
-		fprintf(out, "\n");
-	}
-	fprintf(out, "p1bn, p2bn:\n");
-	fprintf(out, "%d %d\n", p1bn, p2bn);
-	fprintf(out, "\n");
-}
 inline bool range_s(int x)
 {
 	return 1 <= x && x < N;
@@ -148,7 +122,6 @@ bool blk_ok(int z, int x, int y, int d)
 }
 void f(ll msk)
 {
-	printf("msk: %lld\n", msk);
 	bitmask = msk;
 	decode_bitmask();
 	if (vst.find(msk) != vst.end()) return;
