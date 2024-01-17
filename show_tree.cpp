@@ -62,30 +62,34 @@ void decode_bitmask(void)
 
 	bitmask = temp;
 }
-void show_bitmask(void)
+void show_bitmask(ll msk)
 {
+	bitmask = msk;
 	decode_bitmask();
-	int a[6][6] = { 0 };
-	a[N - py1 + 1][px1] = 1;
-	a[N - py2 + 1][px2] = 2;
+	fprintf(out, "raw: %lld\n", msk);
+	fprintf(out, "turn: %d\n", turn);
+	fprintf(out, "b1: %d, b2: %d\n", p1bn, p2bn);
 
-	fprintf(out, "whos turn? %d\n", turn);
-	fprintf(out, "player location:\n");
-	for (int i = 1; i <= N; i++)
-	{
-		for (int j = 1; j <= N; j++)
-			fprintf(out, "%d ", a[i][j]);
-		fprintf(out, "\n");
-	}
-	fprintf(out, "block location:\n");
+	char a[20][20] = { 0 };
+
+	for (int i = 0; i < 2 * N - 1; i++)
+		for (int j = 0; j < 2 * N - 1; j++)
+			a[i][j] = i % 2 || j % 2 ? ' ' : '0';
+	a[px1 - 1 << 1][py1 - 1 << 1] = '1', a[px2 - 1 << 1][py2 - 1 << 1] = '2';
+
 	for (int i = 1; i < N; i++)
-	{
 		for (int j = 1; j < N; j++)
-			fprintf(out, "%d ", pbk[j][N - i]);
+			if (pbk[i][j] == 1)
+				a[i * 2 - 1][j * 2 - 2] = a[i * 2 - 1][j * 2 - 1] = a[i * 2 - 1][j * 2] = '|';
+			else if (pbk[i][j] == 2)
+				a[i * 2 - 2][j * 2 - 1] = a[i * 2 - 1][j * 2 - 1] = a[i * 2][j * 2 - 1] = '-';
+
+	for (int i = 0; i < 2 * N - 1; i++)
+	{
+		for (int j = 0; j < 2 * N - 1; j++)
+			fprintf(out, "%c", a[j][2 * N - 2 - i]);
 		fprintf(out, "\n");
 	}
-	fprintf(out, "p1bn, p2bn:\n");
-	fprintf(out, "%d %d\n", p1bn, p2bn);
 	fprintf(out, "\n");
 }
 int main(void)
@@ -94,27 +98,33 @@ int main(void)
 	fscanf(in, "%d %d", &N, &B);
 	fclose(in);
 
-	sprintf(treefile, "%dx%dx_%d.txt", N, B);
+	sprintf(treefile, "%dx%d_%d.txt", N, N, B);
 	in = fopen(treefile, "r");
 
-	ll msiz, vsiz, msk;
-	fscanf(in, "%lld", msiz);
+	ll msiz = 0, vsiz = 0, msk = 0;
+	fscanf(in, "%lld", &msiz);
 	for (int i = 0; i < msiz; i++)
 	{
-		fscanf(in, "%lld : %lld", msk, vsiz);
+		fscanf(in, "%lld : %lld", &msk, &vsiz);
 		M[msk] = vector<ll>();
 		for (int j = 0; j < vsiz; j++)
-			fscanf(in, "%lld", bitmask), M[msk].push_back(bitmask);
+			fscanf(in, "%lld", &bitmask), M[msk].push_back(bitmask);
 	}
 	fclose(in);
 
 	sprintf(filename, "%dx%d_%d_show.txt", N, N, B);
 	out = fopen(filename, "w");
+	fprintf(out, "tot siz : %d\n", M.size());
 
 	p1bn = p2bn = B;
 	encode_bitmask(1, N / 2 + 1, 1, N / 2 + 1, N);
 
-	fprintf(out, "%d\n", M.size());
+	fprintf(out, "======================================\n");
+	show_bitmask(bitmask);
+	fprintf(out, "--------------------------------------\n");
+	for (ll vi : M[bitmask]) show_bitmask(vi);
+	fprintf(out, "======================================\n");
+
 	fclose(out);
 
 	return 0;
