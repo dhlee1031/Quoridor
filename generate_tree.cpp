@@ -106,8 +106,6 @@ bool can_win(int x0, int y0)
 }
 bool blk_ok(int z, int x, int y, int d)
 {
-	decode_bitmask();
-
 	if (z == 1 && p1bn == 0 || z == 2 && p2bn == 0 || pbk[x][y])
 		return false;
 	if (!(d == 1 && pbk_empty(x, y - 1, 1) && pbk_empty(x, y + 1, 1)
@@ -262,6 +260,8 @@ int main(void)
 	}
 
 	fclose(out);
+
+	printf("%d %d : %d\n", N, B, vst.size());
 
 	return 0;
 }
